@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.shuaizhao.project.mapper.CustomPermissionMapper">
+	<resultMap id="BaseResultMap" type="com.shuaizhao.project.model.Permission">
+		<id column="id" property="id" jdbcType="BIGINT" />
+		<result column="name" property="name" jdbcType="VARCHAR" />
+		<result column="type" property="type" jdbcType="VARCHAR" />
+		<result column="url" property="url" jdbcType="VARCHAR" />
+		<result column="percode" property="percode" jdbcType="VARCHAR" />
+		<result column="parentid" property="parentid" jdbcType="BIGINT" />
+		<result column="parentids" property="parentids" jdbcType="VARCHAR" />
+		<result column="sortstring" property="sortstring" jdbcType="VARCHAR" />
+		<result column="available" property="available" jdbcType="CHAR" />
+	</resultMap>
+
+	<resultMap id="RoleResultMap" type="com.shuaizhao.project.model.Role">
+		<id column="id" property="id" jdbcType="VARCHAR" />
+		<result column="name" property="name" jdbcType="VARCHAR" />
+		<result column="available" property="available" jdbcType="CHAR" />
+	</resultMap>
+
+	<select id="selectMenuByUserId" parameterType="java.lang.String"
+		resultMap="BaseResultMap">
+		SELECT
+		*
+		FROM
+		permission
+		WHERE
+		id IN (
+		SELECT
+		role_permission.sys_permission_id
+		FROM
+		role_permission
+		WHERE
+		sys_role_id
+		IN (
+		SELECT
+		user_role.sys_role_id
+		FROM
+		user_role
+		WHERE
+		user_role.sys_user_id = #{id}
+		)
+		)
+
+		and type="menu"
+	</select>
+
+	<select id="selectPremissionByUserId" parameterType="java.lang.String"
+		resultMap="BaseResultMap">
+		SELECT
+		*
+		FROM
+		permission
+		WHERE
+		id IN (
+		SELECT
+		role_permission.sys_permission_id
+		FROM
+		role_permission
+		WHERE
+		sys_role_id
+		IN (
+		SELECT
+		user_role.sys_role_id
+		FROM
+		user_role
+		WHERE
+		user_role.sys_user_id = #{id}
+		)
+		)
+
+		and type="permission"
+	</select>
+
+	<select id="getRolesByUserId" parameterType="java.lang.String"
+		resultMap="RoleResultMap">
+		SELECT
+		*
+		FROM
+		role
+		WHERE
+		id NOT IN (
+		SELECT
+		role.id
+		FROM
+		user_role,
+		role
+		WHERE
+		user_role.sys_role_id = role.id
+		and
+		user_role.sys_user_id =
+		#{userId} 
+		and role.id != 004
+		)
+		and role.available=1
+	</select>
+
+	<select id="checkUserRoleExist" parameterType="com.shuaizhao.project.model.UserRole"
+		resultType="int">
+		SELECT
+		count(*)
+		FROM
+		user_role
+		WHERE
+		user_role.sys_role_id = #{sysRoleId}
+		AND user_role.sys_user_id =#{sysUserId}
+	</select>
+</mapper>
